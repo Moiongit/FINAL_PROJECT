@@ -158,24 +158,23 @@ public:
     }
 
     void mainMenu() {
-        
-    int choice;
-    do {
-        printSeparator();
-        cout << "Welcome to Hotel Reservation System\n";
-        printSeparator();
-        cout << "\nMain Menu\n";
-        cout << "\nSelect Role:\n";
-        cout << "1. Admin\n2. Customer\n0. Exit\nChoice: ";
-        choice = getInt("");
+        int choice;
+        do {
+            printSeparator();
+            cout << "Welcome to Hotel Reservation System\n";
+            printSeparator();
+            cout << "\nMain Menu\n";
+            cout << "\nSelect Role:\n";
+            cout << "1. Admin\n2. Customer\n0. Exit\nChoice: ";
+            choice = getInt("");
 
-        if (choice == 1) {
-            if (adminLogin()) userMenu();
-        } else if (choice == 2) {
-            customerSubmenu();
-        }
-    } while (choice != 0);
-}
+            if (choice == 1) {
+                if (adminLogin()) userMenu();
+            } else if (choice == 2) {
+                customerSubmenu();
+            }
+        } while (choice != 0);
+    }
 
     bool adminLogin() {
         string uname, pass;
@@ -265,6 +264,7 @@ public:
             cout << "5. Edit Room Rate\n";
             cout << "6. Edit Room Availability\n";
             cout << "7. Cancel a Reservation\n";
+            cout << "8. Show Available Rooms Only\n";
             cout << "0. Logout\n";
             choice = getInt("Choice: ");
             if (choice == 1) showReservations();
@@ -274,6 +274,7 @@ public:
             else if (choice == 5) editRoomRate();
             else if (choice == 6) editRoomAvailability();
             else if (choice == 7) cancelReservation();
+            else if (choice == 8) showAvailableRooms();
         } while (choice != 0);
     }
 
@@ -284,11 +285,13 @@ public:
             cout << "1. Book Room\n";
             cout << "2. My Room Reservations\n";
             cout << "3. Cancel My Reservation\n";
+            cout << "4. Show Available Rooms Only\n";
             cout << "0. Logout\n";
             choice = getInt("Choice: ");
             if (choice == 1) bookRoom();
             else if (choice == 2) myReservations();
             else if (choice == 3) cancelReservation();
+            else if (choice == 4) showAvailableRooms();
         } while (choice != 0);
     }
 
@@ -298,6 +301,21 @@ public:
             cout << "Room " << room.getRoomNumber()
                  << " | Rate: $" << room.getRate()
                  << " | " << (room.isAvailable() ? "Available" : "Booked") << endl;
+        }
+    }
+
+    void showAvailableRooms() {
+        cout << "\nAvailable Rooms:\n";
+        bool anyAvailable = false;
+        for (const auto& room : rooms) {
+            if (room.isAvailable()) {
+                cout << "Room " << room.getRoomNumber()
+                     << " | Rate: $" << room.getRate() << endl;
+                anyAvailable = true;
+            }
+        }
+        if (!anyAvailable) {
+            cout << "No rooms available at the moment.\n";
         }
     }
 
