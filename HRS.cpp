@@ -409,6 +409,7 @@ public:
     }
 };
 
+// Entry point of the Hotel Reservation System
 int main() {
     HotelSystem system;
     system.mainMenu();
