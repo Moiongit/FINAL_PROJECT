@@ -188,6 +188,7 @@ public:
                 user->getUsername() == uname && user->checkPassword(pass)) {
                 currentUser = user;
                 cout << "Login successful!\n";
+                cout << "Redirecting to menu...\n"; // ✅ Enhancement added here
                 currentUser->menu();
                 return true;
             }
@@ -220,6 +221,7 @@ public:
                 user->getUsername() == uname && user->checkPassword(pass)) {
                 currentUser = user;
                 cout << "Login successful!\n";
+                cout << "Redirecting to menu...\n"; // ✅ Enhancement added here
                 currentUser->menu();
                 return true;
             }
