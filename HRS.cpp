@@ -107,6 +107,10 @@ private:
     BillStrategy* billStrategy;
     User* currentUser = nullptr;
 
+    void printSeparator() {
+        cout << "------------------------------" << endl;
+    }
+
     Room* findRoom(int num) {
         for (auto& room : rooms)
             if (room.getRoomNumber() == num)
@@ -154,21 +158,24 @@ public:
     }
 
     void mainMenu() {
-        int choice;
-        do {
-            cout << "Welcome to Hotel Reservation System\n";
-            cout << "\nMain Menu\n";
-            cout << "\nSelect Role:\n";
-            cout << "1. Admin\n2. Customer\n0. Exit\nChoice: ";
-            choice = getInt("");
+        
+    int choice;
+    do {
+        printSeparator();
+        cout << "Welcome to Hotel Reservation System\n";
+        printSeparator();
+        cout << "\nMain Menu\n";
+        cout << "\nSelect Role:\n";
+        cout << "1. Admin\n2. Customer\n0. Exit\nChoice: ";
+        choice = getInt("");
 
-            if (choice == 1) {
-                if (adminLogin()) userMenu();
-            } else if (choice == 2) {
-                customerSubmenu();
-            }
-        } while (choice != 0);
-    }
+        if (choice == 1) {
+            if (adminLogin()) userMenu();
+        } else if (choice == 2) {
+            customerSubmenu();
+        }
+    } while (choice != 0);
+}
 
     bool adminLogin() {
         string uname, pass;
