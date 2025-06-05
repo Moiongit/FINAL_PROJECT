@@ -4,10 +4,12 @@
 #include <stdexcept>
 using namespace std;
 
-// Strategy Pattern for Bill Calculation
+// ==============================
+// Strategy Pattern for Bill Calculation (Polymorphism + Strategy Pattern)
+// ==============================
 class BillStrategy {
 public:
-    virtual double calculateBill(int nights, double rate) = 0;
+    virtual double calculateBill(int nights, double rate) = 0; // Pure virtual (abstract method)
     virtual ~BillStrategy() {}
 };
 
@@ -22,12 +24,14 @@ class DiscountBill : public BillStrategy {
 public:
     double calculateBill(int nights, double rate) override {
         if (nights >= 5)
-            return nights * rate * 0.9; // 10% discount
+            return nights * rate * 0.9; // 10% discount for 5 or more nights
         return nights * rate;
     }
 };
 
-// Room class
+// ==============================
+// Room class (Encapsulation)
+// ==============================
 class Room {
 private:
     int roomNumber;
@@ -37,23 +41,28 @@ private:
 public:
     Room(int num, double r) : roomNumber(num), available(true), rate(r) {}
 
+    // Getters - Encapsulation: controlled access to private members
     int getRoomNumber() const { return roomNumber; }
     bool isAvailable() const { return available; }
     double getRate() const { return rate; }
 
+    // Setters and State Modifiers - Encapsulation
     void book() { available = false; }
     void release() { available = true; }
     void setRate(double r) { rate = r; }
 };
 
-// Base User class
+// ==============================
+// Base User class (Inheritance + Polymorphism + Encapsulation)
+// ==============================
 class User {
 protected:
     string username, password;
 
 public:
     User(string u, string p) : username(u), password(p) {}
-    virtual void menu() = 0;
+
+    virtual void menu() = 0;  // Pure virtual - Abstract class, forces subclasses to implement
 
     string getUsername() const { return username; }
     bool checkPassword(const string& p) const { return password == p; }
@@ -63,6 +72,7 @@ public:
 class Customer : public User {
 public:
     Customer(string u, string p) : User(u, p) {}
+
     void menu() override {
         cout << "Welcome, " << username << "! (Customer)\n";
     }
@@ -71,12 +81,15 @@ public:
 class Admin : public User {
 public:
     Admin(string u, string p) : User(u, p) {}
+
     void menu() override {
         cout << "Welcome, " << username << "! (Admin)\n";
     }
 };
 
-// Reservation class
+// ==============================
+// Reservation class (Encapsulation)
+// ==============================
 class Reservation {
 private:
     string customerName;
@@ -99,19 +112,23 @@ public:
     string getCustomerName() const { return customerName; }
 };
 
-// System class
+// ==============================
+// HotelSystem class: System Controller (Aggregation, Exception Handling, Encapsulation)
+// ==============================
 class HotelSystem {
 private:
-    vector<Room> rooms;
-    vector<User*> users;
-    vector<Reservation> reservations;
-    BillStrategy* billStrategy;
-    User* currentUser = nullptr;
+    vector<Room> rooms;                  // Aggregation of Room objects
+    vector<User*> users;                 // Aggregation of Users (Admin and Customer)
+    vector<Reservation> reservations;   // Aggregation of Reservations
+    BillStrategy* billStrategy;          // Strategy Pattern for billing
+    User* currentUser = nullptr;         // Pointer to currently logged-in user
 
+    // Utility function for UI separation
     void printSeparator() {
         cout << "------------------------------" << endl;
     }
 
+    // Find room by number (Encapsulation, Helper function)
     Room* findRoom(int num) {
         for (auto& room : rooms)
             if (room.getRoomNumber() == num)
@@ -119,6 +136,7 @@ private:
         return nullptr;
     }
 
+    // Input validation with exception handling
     int getInt(const string& prompt) {
         int val;
         while (true) {
@@ -137,6 +155,7 @@ private:
         }
     }
 
+    // Input validation for double values (non-negative)
     double getDouble(const string& prompt) {
         double val;
         while (true) {
@@ -156,20 +175,23 @@ private:
     }
 
 public:
+    // Constructor initializes system with default rooms and admin user
     HotelSystem() {
         rooms.emplace_back(101, 100.0);
         rooms.emplace_back(102, 120.0);
         rooms.emplace_back(103, 150.0);
         users.push_back(new Admin("admin", "admin123"));
-        billStrategy = new StandardBill();
+        billStrategy = new StandardBill(); // Default billing strategy
     }
 
+    // Destructor to free dynamically allocated memory (Rule of three)
     ~HotelSystem() {
         delete billStrategy;
         for (auto user : users)
             delete user;
     }
 
+    // Main menu, entry point for user roles
     void mainMenu() {
         int choice;
         do {
@@ -189,6 +211,7 @@ public:
         } while (choice != 0);
     }
 
+    // Admin login function (User Authentication)
     bool adminLogin() {
         string uname, pass;
         cout << "[Admin Login]\nUsername: ";
@@ -209,6 +232,7 @@ public:
         return false;
     }
 
+    // Customer submenu for signup/login
     void customerSubmenu() {
         int choice;
         do {
@@ -221,6 +245,7 @@ public:
         } while (choice != 0);
     }
 
+    // Customer login function (User Authentication)
     bool customerLogin() {
         string uname, pass;
         cout << "[Customer Login]\nUsername: ";
@@ -241,6 +266,7 @@ public:
         return false;
     }
 
+    // Customer signup (Encapsulation + Data validation)
     void signup() {
         string uname, pass;
         cout << "Enter new username: ";
@@ -258,6 +284,7 @@ public:
         cout << "Signup successful! Please login.\n";
     }
 
+    // User menu dispatch based on dynamic type (Polymorphism)
     void userMenu() {
         if (dynamic_cast<Admin*>(currentUser)) {
             adminMenu();
@@ -266,6 +293,9 @@ public:
         }
     }
 
+    // ============================
+    // Admin menu options
+    // ============================
     void adminMenu() {
         int choice;
         do {
@@ -291,6 +321,9 @@ public:
         } while (choice != 0);
     }
 
+    // ============================
+    // Customer menu options
+    // ============================
     void customerMenu() {
         int choice;
         do {
@@ -308,6 +341,7 @@ public:
         } while (choice != 0);
     }
 
+    // Show all rooms with status (Information Display)
     void showRooms() {
         cout << "\nRooms:\n";
         cout << "Room #  |  Rate ($)  |  Status\n";
@@ -318,6 +352,7 @@ public:
         }
     }
 
+    // Show only available rooms (Information Display)
     void showAvailableRooms() {
         cout << "\nAvailable Rooms:\n";
         bool anyAvailable = false;
@@ -333,6 +368,7 @@ public:
         }
     }
 
+    // Book room for current customer (Business logic + Encapsulation + Error handling)
     void bookRoom() {
         try {
             showRooms();
@@ -351,6 +387,7 @@ public:
                 cout << "Invalid number of nights.\n";
                 return;
             }
+            // Calculate bill using strategy pattern
             double bill = billStrategy->calculateBill(nights, room->getRate());
             room->book();
             reservations.emplace_back(currentUser->getUsername(), roomNum, nights, bill);
@@ -360,6 +397,7 @@ public:
         }
     }
 
+    // Show reservations for current customer (Information display + Encapsulation)
     void myReservations() {
         cout << "\nYour Reservations:\n";
         cout << "Customer    | Room | Nights | Total Bill\n";
@@ -370,12 +408,14 @@ public:
         }
     }
 
+    // Show all reservations (Admin only) (Information display)
     void showReservations() {
         cout << "\nAll Reservations:\n";
         for (const auto& res : reservations)
             res.show();
     }
 
+    // Cancel reservation (Access control + Business logic + Exception handling)
     void cancelReservation() {
         try {
             cout << "\nCancel Reservation:\n";
@@ -384,6 +424,7 @@ public:
 
             for (auto it = reservations.begin(); it != reservations.end(); ++it) {
                 if (it->getRoomNumber() == roomNum) {
+                    // Customer can only cancel their own reservation
                     if (dynamic_cast<Customer*>(currentUser)) {
                         if (it->getCustomerName() != currentUser->getUsername()) {
                             cout << "You can only cancel your own reservations.\n";
@@ -406,6 +447,7 @@ public:
         }
     }
 
+    // Change billing strategy dynamically (Strategy pattern)
     void changeBillStrategy() {
         cout << "\nSelect Bill Strategy:\n";
         cout << "1. Standard\n2. Discount (10% off for 5+ nights)\nChoice: ";
@@ -417,6 +459,7 @@ public:
         cout << "Bill strategy changed.\n";
     }
 
+    // Admin function: Add new room (Encapsulation + Exception handling)
     void addRoom() {
         try {
             int roomNum = getInt("Enter new room number: ");
@@ -432,6 +475,7 @@ public:
         }
     }
 
+    // Admin function: Edit room rate (Encapsulation + Exception handling)
     void editRoomRate() {
         try {
             int roomNum = getInt("Enter room number to edit rate: ");
@@ -448,25 +492,27 @@ public:
         }
     }
 
+    // Admin function: Edit room availability (Encapsulation)
     void editRoomAvailability() {
-        try {
-            int roomNum = getInt("Enter room number to edit availability: ");
-            Room* room = findRoom(roomNum);
-            if (!room) {
-                cout << "Room not found.\n";
-                return;
-            }
-            cout << "Set availability (1 = Available, 0 = Booked): ";
-            int avail = getInt("");
-            if (avail != 0 && avail != 1) {
-                cout << "Invalid availability option.\n";
-                return;
-            }
-            if (avail == 1) room->release();
-            else room->book();
-            cout << "Room availability updated.\n";
-        } catch (const exception& e) {
-            cout << "An error occurred while editing room availability: " << e.what() << endl;
+        int roomNum = getInt("Enter room number to change availability: ");
+        Room* room = findRoom(roomNum);
+        if (!room) {
+            cout << "Room not found.\n";
+            return;
+        }
+        cout << "Current availability: " << (room->isAvailable() ? "Available" : "Booked") << endl;
+        cout << "1. Make Available\n2. Make Booked\nChoice: ";
+        int choice;
+        cin >> choice;
+        cin.ignore(1000, '\n');
+        if (choice == 1) {
+            room->release();
+            cout << "Room marked as available.\n";
+        } else if (choice == 2) {
+            room->book();
+            cout << "Room marked as booked.\n";
+        } else {
+            cout << "Invalid choice.\n";
         }
     }
 };
