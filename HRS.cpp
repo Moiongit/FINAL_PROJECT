@@ -344,10 +344,12 @@ public:
     }
 
     void myReservations() {
-        cout << "\nYour Reservations:\n";
-        for (const auto& res : reservations) {
-            if (res.getCustomerName() == currentUser->getUsername())
-                res.show();
+    cout << "\nYour Reservations:\n";
+    cout << "Customer    | Room | Nights | Total Bill\n";
+    cout << "----------------------------------------\n";
+    for (const auto& res : reservations) {
+        if (res.getCustomerName() == currentUser->getUsername())
+            res.show();
         }
     }
 
