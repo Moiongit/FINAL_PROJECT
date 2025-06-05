@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stdexcept>
 using namespace std;
 
 // Strategy Pattern for Bill Calculation
@@ -120,26 +121,38 @@ private:
 
     int getInt(const string& prompt) {
         int val;
-        cout << prompt;
-        while (!(cin >> val)) {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "Invalid input. Try again.\n" << prompt;
+        while (true) {
+            try {
+                cout << prompt;
+                if (!(cin >> val)) {
+                    cin.clear();
+                    cin.ignore(1000, '\n');
+                    throw runtime_error("Invalid input. Please enter an integer.");
+                }
+                cin.ignore(1000, '\n');
+                return val;
+            } catch (const runtime_error& e) {
+                cout << e.what() << endl;
+            }
         }
-        cin.ignore(1000, '\n');
-        return val;
     }
 
     double getDouble(const string& prompt) {
         double val;
-        cout << prompt;
-        while (!(cin >> val) || val < 0) {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "Invalid input. Try again.\n" << prompt;
+        while (true) {
+            try {
+                cout << prompt;
+                if (!(cin >> val) || val < 0) {
+                    cin.clear();
+                    cin.ignore(1000, '\n');
+                    throw runtime_error("Invalid input. Please enter a non-negative number.");
+                }
+                cin.ignore(1000, '\n');
+                return val;
+            } catch (const runtime_error& e) {
+                cout << e.what() << endl;
+            }
         }
-        cin.ignore(1000, '\n');
-        return val;
     }
 
 public:
@@ -321,35 +334,39 @@ public:
     }
 
     void bookRoom() {
-        showRooms();
-        int roomNum = getInt("Enter room number to book: ");
-        Room* room = findRoom(roomNum);
-        if (!room) {
-            cout << "Room not found.\n";
-            return;
+        try {
+            showRooms();
+            int roomNum = getInt("Enter room number to book: ");
+            Room* room = findRoom(roomNum);
+            if (!room) {
+                cout << "Room not found.\n";
+                return;
+            }
+            if (!room->isAvailable()) {
+                cout << "Room is already booked.\n";
+                return;
+            }
+            int nights = getInt("How many nights? ");
+            if (nights <= 0) {
+                cout << "Invalid number of nights.\n";
+                return;
+            }
+            double bill = billStrategy->calculateBill(nights, room->getRate());
+            room->book();
+            reservations.emplace_back(currentUser->getUsername(), roomNum, nights, bill);
+            cout << "Room booked! Total bill: $" << bill << endl;
+        } catch (const exception& e) {
+            cout << "An error occurred while booking: " << e.what() << endl;
         }
-        if (!room->isAvailable()) {
-            cout << "Room is already booked.\n";
-            return;
-        }
-        int nights = getInt("How many nights? ");
-        if (nights <= 0) {
-            cout << "Invalid number of nights.\n";
-            return;
-        }
-        double bill = billStrategy->calculateBill(nights, room->getRate());
-        room->book();
-        reservations.emplace_back(currentUser->getUsername(), roomNum, nights, bill);
-        cout << "Room booked! Total bill: $" << bill << endl;
     }
 
     void myReservations() {
-    cout << "\nYour Reservations:\n";
-    cout << "Customer    | Room | Nights | Total Bill\n";
-    cout << "----------------------------------------\n";
-    for (const auto& res : reservations) {
-        if (res.getCustomerName() == currentUser->getUsername())
-            res.show();
+        cout << "\nYour Reservations:\n";
+        cout << "Customer    | Room | Nights | Total Bill\n";
+        cout << "----------------------------------------\n";
+        for (const auto& res : reservations) {
+            if (res.getCustomerName() == currentUser->getUsername())
+                res.show();
         }
     }
 
@@ -360,86 +377,102 @@ public:
     }
 
     void cancelReservation() {
-        cout << "\nCancel Reservation:\n";
-        int roomNum = getInt("Enter room number of reservation to cancel: ");
-        bool found = false;
+        try {
+            cout << "\nCancel Reservation:\n";
+            int roomNum = getInt("Enter room number of reservation to cancel: ");
+            bool found = false;
 
-        for (auto it = reservations.begin(); it != reservations.end(); ++it) {
-            if (it->getRoomNumber() == roomNum &&
-                (dynamic_cast<Admin*>(currentUser) || it->getCustomerName() == currentUser->getUsername())) {
-                Room* room = findRoom(roomNum);
-                if (room) room->release();
-                reservations.erase(it);
-                cout << "Reservation cancelled successfully.\n";
-                found = true;
-                break;
+            for (auto it = reservations.begin(); it != reservations.end(); ++it) {
+                if (it->getRoomNumber() == roomNum) {
+                    if (dynamic_cast<Customer*>(currentUser)) {
+                        if (it->getCustomerName() != currentUser->getUsername()) {
+                            cout << "You can only cancel your own reservations.\n";
+                            return;
+                        }
+                    }
+                    found = true;
+                    Room* room = findRoom(roomNum);
+                    if (room) room->release();
+                    reservations.erase(it);
+                    cout << "Reservation canceled.\n";
+                    break;
+                }
             }
+            if (!found) {
+                cout << "Reservation not found.\n";
+            }
+        } catch (const exception& e) {
+            cout << "An error occurred while canceling reservation: " << e.what() << endl;
         }
-
-        if (!found)
-            cout << "Reservation not found or you do not have permission to cancel it.\n";
     }
 
     void changeBillStrategy() {
-        cout << "1. Standard Bill\n2. Discount Bill (10% off for 5+ nights)\n";
-        int c = getInt("Choose strategy: ");
+        cout << "\nSelect Bill Strategy:\n";
+        cout << "1. Standard\n2. Discount (10% off for 5+ nights)\nChoice: ";
+        int choice = getInt("");
         delete billStrategy;
-        if (c == 2)
-            billStrategy = new DiscountBill();
-        else
-            billStrategy = new StandardBill();
+        if (choice == 1) billStrategy = new StandardBill();
+        else billStrategy = new DiscountBill();
+
         cout << "Bill strategy changed.\n";
     }
 
     void addRoom() {
-        int roomNum = getInt("Enter new room number: ");
-        for (const auto& room : rooms) {
-            if (room.getRoomNumber() == roomNum) {
+        try {
+            int roomNum = getInt("Enter new room number: ");
+            if (findRoom(roomNum)) {
                 cout << "Room number already exists.\n";
                 return;
             }
+            double rate = getDouble("Enter room rate: ");
+            rooms.emplace_back(roomNum, rate);
+            cout << "Room added successfully.\n";
+        } catch (const exception& e) {
+            cout << "An error occurred while adding room: " << e.what() << endl;
         }
-        double rate = getDouble("Enter room rate: ");
-        rooms.push_back(Room(roomNum, rate));
-        cout << "Room added successfully.\n";
     }
 
     void editRoomRate() {
-        int roomNum = getInt("Enter room number to edit rate: ");
-        Room* room = findRoom(roomNum);
-        if (!room) {
-            cout << "Room not found.\n";
-            return;
+        try {
+            int roomNum = getInt("Enter room number to edit rate: ");
+            Room* room = findRoom(roomNum);
+            if (!room) {
+                cout << "Room not found.\n";
+                return;
+            }
+            double newRate = getDouble("Enter new rate: ");
+            room->setRate(newRate);
+            cout << "Room rate updated.\n";
+        } catch (const exception& e) {
+            cout << "An error occurred while editing room rate: " << e.what() << endl;
         }
-        double newRate = getDouble("Enter new rate: ");
-        room->setRate(newRate);
-        cout << "Room rate updated.\n";
     }
 
     void editRoomAvailability() {
-        int roomNum = getInt("Enter room number to change availability: ");
-        Room* room = findRoom(roomNum);
-        if (!room) {
-            cout << "Room not found.\n";
-            return;
-        }
-        cout << "1. Set as Available\n2. Set as Booked\n";
-        int choice = getInt("Choice: ");
-        if (choice == 1) {
-            room->release();
-            cout << "Room marked as available.\n";
-        } else if (choice == 2) {
-            room->book();
-            cout << "Room marked as booked.\n";
-        } else {
-            cout << "Invalid choice.\n";
+        try {
+            int roomNum = getInt("Enter room number to edit availability: ");
+            Room* room = findRoom(roomNum);
+            if (!room) {
+                cout << "Room not found.\n";
+                return;
+            }
+            cout << "Set availability (1 = Available, 0 = Booked): ";
+            int avail = getInt("");
+            if (avail != 0 && avail != 1) {
+                cout << "Invalid availability option.\n";
+                return;
+            }
+            if (avail == 1) room->release();
+            else room->book();
+            cout << "Room availability updated.\n";
+        } catch (const exception& e) {
+            cout << "An error occurred while editing room availability: " << e.what() << endl;
         }
     }
 };
 
-// Entry point of the Hotel Reservation System
 int main() {
-    HotelSystem system;
-    system.mainMenu();
+    HotelSystem hs;
+    hs.mainMenu();
     return 0;
 }
