@@ -187,8 +187,7 @@ public:
             if (dynamic_cast<Admin*>(user) &&
                 user->getUsername() == uname && user->checkPassword(pass)) {
                 currentUser = user;
-                cout << "Login successful!\n";
-                cout << "Redirecting to menu...\n"; // ✅ Enhancement added here
+                cout << "Login successful!\nRedirecting to menu...\n";
                 currentUser->menu();
                 return true;
             }
@@ -220,8 +219,7 @@ public:
             if (dynamic_cast<Customer*>(user) &&
                 user->getUsername() == uname && user->checkPassword(pass)) {
                 currentUser = user;
-                cout << "Login successful!\n";
-                cout << "Redirecting to menu...\n"; // ✅ Enhancement added here
+                cout << "Login successful!\nRedirecting to menu...\n";
                 currentUser->menu();
                 return true;
             }
@@ -299,10 +297,11 @@ public:
 
     void showRooms() {
         cout << "\nRooms:\n";
+        cout << "Room #  |  Rate ($)  |  Status\n";
+        cout << "-------------------------------\n";
         for (const auto& room : rooms) {
-            cout << "Room " << room.getRoomNumber()
-                 << " | Rate: $" << room.getRate()
-                 << " | " << (room.isAvailable() ? "Available" : "Booked") << endl;
+            cout << room.getRoomNumber() << "      |  " << room.getRate() << "       |  "
+                 << (room.isAvailable() ? "Available" : "Booked") << endl;
         }
     }
 
