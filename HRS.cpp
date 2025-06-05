@@ -165,7 +165,7 @@ public:
             printSeparator();
             cout << "\nMain Menu\n";
             cout << "\nSelect Role:\n";
-            cout << "1. Admin\n2. Customer\n0. Exit\nChoice: ";
+            cout << "1. Admin\n2. Customer\n0. Exit System\nChoice: ";
             choice = getInt("");
 
             if (choice == 1) {
